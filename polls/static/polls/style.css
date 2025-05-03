@@ -1,0 +1,49 @@
+/* Ensure the body takes up the full height of the screen */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: lightcoral;
+}
+
+/* Center the content within a flex container */
+.centered {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Style the buttons */
+.question-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.question-btn {
+    background-color: blue;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    width: 250px;
+    transition: background-color 0.3s ease;
+}
+
+.question-btn:hover {
+    background-color: lightblue;
+}
+
+.question-btn:focus {
+    outline: none;
+}
