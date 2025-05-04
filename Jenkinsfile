@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'kennishas/django-project' // (MODIFY: Enter your Docker Hub username and image name) Example: 'yourusername/your-image-name'
+        DOCKER_IMAGE = 'kennishas/django_app' // (MODIFY: Enter your Docker Hub username and image name) Example: 'yourusername/your-image-name'
         EC2_USER = 'ubuntu'  // (MODIFY) Change to 'ubuntu' if using an Ubuntu AMI or 'ec2-user' if using Amazon Linux AMI
         EC2_HOST = "18.222.135.44" //(MODIFY: Enter your EC2 instance public IP address)
         EC2_KEY = credentials('ec2-ssh-private-key')  // (MODIFY: ensure you create this credential in Jenkins. This is the SSH private key of your EC2 instance)
