@@ -3,11 +3,12 @@ FROM python:3.13.3-slim as base
 
 ENV PYTHONUNBUFFERED 1
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     build-essential \
     nginx \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 
