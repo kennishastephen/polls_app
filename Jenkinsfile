@@ -2,34 +2,60 @@ pipeline {
     agent any
 
     environment {
-        EC2_USER = "ubuntu"
-        EC2_HOST = "18.222.135.44"
-        EC2_KEY = credentials('ec2-ssh-private-key')
-        PROJECT_DIR = "/home/ubuntu/polls_app"
-        VENV_DIR = "${PROJECT_DIR}/venv"
+        DOCKER_IMAGE = 'kennishas/django_app' // (MODIFY: Enter your Docker Hub username and image name) Example: 'yourusername/your-image-name'
+        EC2_USER = 'ubuntu'  // (MODIFY) Change to 'ubuntu' if using an Ubuntu AMI or 'ec2-user' if using Amazon Linux AMI
+        EC2_HOST = "18.222.135.44" //(MODIFY: Enter your EC2 instance public IP address)
+        EC2_KEY = credentials('ec2-ssh-private-key')  // (MODIFY: ensure you create this credential in Jenkins. This is the SSH private key of your EC2 instance)
+        DOCKER_CREDS = 'docker-hub-credentials' // Set up Jenkins credentials for Docker Hub. Ensure the ID is 'docker-hub-credentials'
+        PROJECT_DIR = "/home/ubuntu/polls_app"  // (MODIFY: enter the path to your Django project on the EC2 instance)
     }
 
+    //triggers {
+      //  githubPush()
+    //}
+
     stages {
-        stage('Update Code on EC2') {
+        stage('Clone Repository') {
+            steps {
+                // (MODIFY: Enter your GitHub repository URL)
+                git branch: 'master', url: 'https://github.com/kennishastephen/polls_app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Add debugging output to check the SSH connection
+                    docker.build("${DOCKER_IMAGE}:latest")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
+                        docker.image("${DOCKER_IMAGE}:latest").push()
+                        echo "Image pushed to Docker Hub"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy on EC2') {
+            steps {
+                script {
                     sshagent (credentials: ['ec2-ssh-private-key']) {
                         sh """
-                        echo 'Connecting to EC2...'
-                        ssh -v -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-                            echo "SSH connection successful"
-                            cd ${PROJECT_DIR}
-                            git pull origin master
-                            python3 -m venv venv
-                            ${VENV_DIR}/bin/pip install --upgrade pip
-                            ${VENV_DIR}/bin/pip install -r requirements.txt
-                            ${VENV_DIR}/bin/python manage.py migrate
-                            ${VENV_DIR}/bin/python manage.py collectstatic --noinput
-                            echo "Deployment steps completed"
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+                            docker pull ${DOCKER_IMAGE}:latest
+                            docker ps -a -q -f name=django-container | grep -q . && docker stop django-container || true
+                            docker ps -a -q -f name=django-container | grep -q . && docker rm django-container || true
+                            docker run -d --name django-container -p 80:80 ${DOCKER_IMAGE}:latest
+                            sleep 5
+                            docker ps -a
+                            docker logs django-container || true
                         '
-                        echo 'Finished SSH commands.'
-                        '''
+                        """
                     }
                 }
             }
@@ -38,10 +64,10 @@ pipeline {
 
     post {
         success {
-            echo "Code updated and app restarted successfully on EC2!"
+            echo 'Deployment Successful!'
         }
         failure {
-            echo "Deployment failed."
+            echo 'Deployment Failed.'
         }
     }
 }
