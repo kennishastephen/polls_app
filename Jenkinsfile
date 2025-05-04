@@ -18,7 +18,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 // (MODIFY: Enter your GitHub repository URL)
-                git branch: 'main', url: 'https://github.com/kennishastephen/polls_app.git'
+                git branch: 'master', url: 'https://github.com/kennishastephen/polls_app.git'
             }
         }
 
